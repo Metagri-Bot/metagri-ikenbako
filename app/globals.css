@@ -1,0 +1,106 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f5f7fb;
+  color: #1b1d22;
+}
+
+.container {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.card {
+  width: min(100%, 640px);
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 8px 28px rgba(14, 18, 28, 0.08);
+}
+
+@media (min-width: 640px) {
+  .card {
+    padding: 2rem;
+  }
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+}
+
+.lead {
+  margin-top: 0;
+  color: #4a4f5c;
+}
+
+.form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+label {
+  font-weight: 600;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #d6dbe8;
+  border-radius: 10px;
+  padding: 0.7rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #6d9ef8;
+  border-color: #6d9ef8;
+}
+
+.checkbox {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: #2156d9;
+}
+
+button:disabled {
+  opacity: 0.6;
+}
+
+.error {
+  color: #ba1a1a;
+  font-size: 0.9rem;
+}
+
+.status {
+  margin: 0;
+  font-size: 0.95rem;
+}

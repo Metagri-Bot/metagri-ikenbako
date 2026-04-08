@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+.env*
+!.env.example
+coverage
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
