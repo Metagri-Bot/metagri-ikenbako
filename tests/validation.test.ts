@@ -19,7 +19,7 @@ describe('feedbackSchema', () => {
     const result = feedbackSchema.safeParse({
       isAnonymous: false,
       name: '',
-      category: 'feature',
+      category: 'request',
       message: 'これは十分な長さのフィードバックです。',
       submittedAt: new Date(Date.now() - 5000).toISOString(),
       honeypot: ''

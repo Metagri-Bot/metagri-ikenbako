@@ -18,13 +18,14 @@ export async function appendFeedbackToSheet(config: SheetsConfig, feedback: Feed
   const sheets = google.sheets({ version: 'v4', auth });
   await sheets.spreadsheets.values.append({
     spreadsheetId: config.spreadsheetId,
-    range: `${config.sheetName}!A:G`,
+    range: `${config.sheetName}!A:H`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [[
         new Date().toISOString(),
         feedback.isAnonymous ? '匿名' : feedback.name ?? '',
         feedback.category,
+        feedback.mood ?? '',
         feedback.message,
         ip ?? '',
         feedback.submittedAt,

@@ -3,37 +3,73 @@
 import { useState } from 'react';
 
 const categories = [
-  { value: 'bug', label: '不具合' },
-  { value: 'feature', label: '機能要望' },
-  { value: 'idea', label: 'アイデア' },
-  { value: 'other', label: 'その他' }
+  { value: 'opinion', label: '意見', emoji: '💬' },
+  { value: 'request', label: '要望', emoji: '✨' },
+  { value: 'trouble', label: '困りごと', emoji: '😓' },
+  { value: 'idea', label: 'アイデア', emoji: '💡' },
+  { value: 'cheer', label: '応援メッセージ', emoji: '🎉' }
 ] as const;
+
+const moods = [
+  { value: 'わくわく', emoji: '🌟' },
+  { value: '困ってる', emoji: '😔' },
+  { value: '相談したい', emoji: '🗣️' },
+  { value: '改善提案', emoji: '🔧' }
+];
+
+const successMessages: Record<string, { title: string; body: string }> = {
+  opinion: {
+    title: 'あなたの声を受け取りました！',
+    body: 'あなたの意見がコミュニティを前に進める力になります。心よりありがとうございます。'
+  },
+  request: {
+    title: 'ご要望、しっかり届きました！',
+    body: '実現に向けてチームで検討します。声を上げてくれてありがとうございます！'
+  },
+  trouble: {
+    title: '困りごとを聞かせてくれてありがとう！',
+    body: '一人で抱え込まないで。一緒に解決策を探していきます。'
+  },
+  idea: {
+    title: '素敵なアイデアが届きました！',
+    body: 'あなたの発想がコミュニティの未来を広げます。ありがとうございます！'
+  },
+  cheer: {
+    title: '応援メッセージが届きました！',
+    body: 'チーム全員の大きな励みになります。本当にありがとうございます！'
+  }
+};
+
+type Category = (typeof categories)[number]['value'];
 
 type FormState = {
   isAnonymous: boolean;
   name: string;
-  category: (typeof categories)[number]['value'];
+  category: Category;
+  mood: string;
   message: string;
   honeypot: string;
 };
 
+const defaultForm: FormState = {
+  isAnonymous: true,
+  name: '',
+  category: 'idea',
+  mood: '',
+  message: '',
+  honeypot: ''
+};
+
 export function FeedbackForm() {
-  const [form, setForm] = useState<FormState>({
-    isAnonymous: true,
-    name: '',
-    category: 'idea',
-    message: '',
-    honeypot: ''
-  });
+  const [form, setForm] = useState<FormState>(defaultForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [submittedCategory, setSubmittedCategory] = useState<Category | null>(null);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    setStatus(null);
 
     try {
       const response = await fetch('/api/feedback', {
@@ -47,13 +83,34 @@ export function FeedbackForm() {
         throw new Error(body.message ?? '送信に失敗しました');
       }
 
-      setStatus('フィードバックを送信しました。ありがとうございます！');
-      setForm((previous) => ({ ...previous, name: '', message: '', honeypot: '' }));
+      setSubmittedCategory(form.category);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : '送信エラーが発生しました');
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleReset() {
+    setSubmittedCategory(null);
+    setForm(defaultForm);
+    setError(null);
+  }
+
+  if (submittedCategory) {
+    const msg = successMessages[submittedCategory];
+    const cat = categories.find((c) => c.value === submittedCategory);
+    return (
+      <div className="success-panel">
+        <div className="success-icon">{cat?.emoji}</div>
+        <h2 className="success-title">{msg.title}</h2>
+        <p className="success-body">{msg.body}</p>
+        <p className="success-sub">コミュニティを育てる一票を受け取りました🌱</p>
+        <button type="button" className="btn-reset" onClick={handleReset}>
+          もう一件投稿する
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -82,20 +139,42 @@ export function FeedbackForm() {
       </div>
 
       <div className="row">
-        <label htmlFor="category">カテゴリ</label>
-        <select
-          id="category"
-          value={form.category}
-          onChange={(event) =>
-            setForm((previous) => ({ ...previous, category: event.target.value as FormState['category'] }))
-          }
-        >
-          {categories.map((category) => (
-            <option key={category.value} value={category.value}>
-              {category.label}
-            </option>
+        <label>投稿種別</label>
+        <div className="category-chips">
+          {categories.map((cat) => (
+            <button
+              key={cat.value}
+              type="button"
+              className={`chip${form.category === cat.value ? ' chip--active' : ''}`}
+              onClick={() => setForm((previous) => ({ ...previous, category: cat.value }))}
+            >
+              <span className="chip-emoji">{cat.emoji}</span>
+              {cat.label}
+            </button>
           ))}
-        </select>
+        </div>
+      </div>
+
+      <div className="row">
+        <label>いまの気分 <span className="label-optional">（任意）</span></label>
+        <div className="mood-chips">
+          {moods.map((mood) => (
+            <button
+              key={mood.value}
+              type="button"
+              className={`chip chip--mood${form.mood === mood.value ? ' chip--active' : ''}`}
+              onClick={() =>
+                setForm((previous) => ({
+                  ...previous,
+                  mood: previous.mood === mood.value ? '' : mood.value
+                }))
+              }
+            >
+              <span className="chip-emoji">{mood.emoji}</span>
+              {mood.value}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="row">
@@ -125,7 +204,6 @@ export function FeedbackForm() {
 
       <button type="submit" disabled={loading}>{loading ? '送信中...' : '送信する'}</button>
       {error ? <p className="error">{error}</p> : null}
-      {status ? <p className="status">{status}</p> : null}
     </form>
   );
 }
