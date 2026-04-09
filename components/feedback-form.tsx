@@ -49,19 +49,23 @@ type FormState = {
   mood: string;
   message: string;
   honeypot: string;
+  submittedAt: string;
 };
 
-const defaultForm: FormState = {
-  isAnonymous: true,
-  name: '',
-  category: 'idea',
-  mood: '',
-  message: '',
-  honeypot: ''
-};
+function createDefaultForm(): FormState {
+  return {
+    isAnonymous: true,
+    name: '',
+    category: 'idea',
+    mood: '',
+    message: '',
+    honeypot: '',
+    submittedAt: new Date().toISOString()
+  };
+}
 
 export function FeedbackForm() {
-  const [form, setForm] = useState<FormState>(defaultForm);
+  const [form, setForm] = useState<FormState>(() => createDefaultForm());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submittedCategory, setSubmittedCategory] = useState<Category | null>(null);
@@ -75,7 +79,7 @@ export function FeedbackForm() {
       const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, submittedAt: new Date().toISOString() })
+        body: JSON.stringify(form)
       });
 
       const body = (await response.json()) as { message?: string };
@@ -93,7 +97,7 @@ export function FeedbackForm() {
 
   function handleReset() {
     setSubmittedCategory(null);
-    setForm(defaultForm);
+    setForm(createDefaultForm());
     setError(null);
   }
 
