@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 const categories = [
   { value: 'bug', label: '不具合' },
@@ -12,7 +12,6 @@ const categories = [
 type FormState = {
   isAnonymous: boolean;
   name: string;
-  email: string;
   category: (typeof categories)[number]['value'];
   message: string;
   honeypot: string;
@@ -22,7 +21,6 @@ export function FeedbackForm() {
   const [form, setForm] = useState<FormState>({
     isAnonymous: true,
     name: '',
-    email: '',
     category: 'idea',
     message: '',
     honeypot: ''
@@ -30,8 +28,6 @@ export function FeedbackForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-
-  const submittedAt = useMemo(() => new Date().toISOString(), []);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,7 +39,7 @@ export function FeedbackForm() {
       const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, submittedAt })
+        body: JSON.stringify({ ...form, submittedAt: new Date().toISOString() })
       });
 
       const body = (await response.json()) as { message?: string };
@@ -52,7 +48,7 @@ export function FeedbackForm() {
       }
 
       setStatus('フィードバックを送信しました。ありがとうございます！');
-      setForm((previous) => ({ ...previous, name: '', email: '', message: '', honeypot: '' }));
+      setForm((previous) => ({ ...previous, name: '', message: '', honeypot: '' }));
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : '送信エラーが発生しました');
     } finally {
@@ -82,17 +78,6 @@ export function FeedbackForm() {
           required={!form.isAnonymous}
           value={form.name}
           onChange={(event) => setForm((previous) => ({ ...previous, name: event.target.value }))}
-        />
-      </div>
-
-      <div className="row">
-        <label htmlFor="email">メールアドレス（任意）</label>
-        <input
-          id="email"
-          type="email"
-          maxLength={100}
-          value={form.email}
-          onChange={(event) => setForm((previous) => ({ ...previous, email: event.target.value }))}
         />
       </div>
 

@@ -8,13 +8,16 @@ App Router構成で、モバイル対応UI・匿名/記名投稿・クライア�
 - モバイルファーストUI（1画面完結フォーム）
 - 匿名投稿 / 記名投稿切り替え
 - 入力検証
-  - クライアント：必須/文字数/メール形式
+  - クライアント：必須/文字数
   - サーバー：Zodスキーマで再検証
 - Google Sheets保存（サービスアカウント）
 - スパム対策（MVP向け）
   - Honeypot
   - 送信速度チェック（フォーム表示直後の送信を拒否）
   - IP単位の簡易レート制限
+- Hydration mismatch対策
+  - 送信時刻を submit 時に生成
+  - `<body suppressHydrationWarning>` を適用（ブラウザ拡張の属性注入などを許容）
 
 ## 技術スタック
 
@@ -53,6 +56,10 @@ npm run dev
 2. サービスアカウントに編集権限を共有
 3. シート名を `GOOGLE_SHEET_NAME` に合わせる
 4. API有効化（Google Sheets API）
+
+### シート推奨列順
+
+`timestamp`, `name_or_anonymous`, `category`, `message`, `ip`, `submitted_at`, `is_anonymous`
 
 ## テスト
 
