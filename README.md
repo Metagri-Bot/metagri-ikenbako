@@ -49,6 +49,8 @@ npm run dev
 - `MIN_SUBMIT_SECONDS`（デフォルト: 3）
 
 > `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` は `\n` を含む文字列形式で設定してください。
+> VercelのEnvironment Variablesに登録する際、値の先頭/末尾に`"`（ダブルクォーテーション）を含めないでください。
+> `"-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----"` のように囲むと認証エラーの原因になります。
 
 ## Google Sheets準備
 
