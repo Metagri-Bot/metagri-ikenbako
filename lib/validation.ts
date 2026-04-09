@@ -3,7 +3,8 @@ import { z } from 'zod';
 export const feedbackSchema = z.object({
   isAnonymous: z.boolean(),
   name: z.string().trim().max(50).optional(),
-  category: z.enum(['bug', 'feature', 'idea', 'other']),
+  category: z.enum(['opinion', 'request', 'trouble', 'idea', 'cheer']),
+  mood: z.string().trim().max(20).optional().default(''),
   message: z.string().trim().min(10, '10文字以上で入力してください').max(1000),
   submittedAt: z.string().datetime(),
   honeypot: z.string().max(0).optional().default('')

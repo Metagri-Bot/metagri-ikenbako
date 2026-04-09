@@ -95,12 +95,108 @@ button:disabled {
   opacity: 0.6;
 }
 
+.label-optional {
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.category-chips,
+.mood-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1.5px solid #d6dbe8;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a4f5c;
+  background: #f9fafc;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.chip:hover {
+  border-color: #6d9ef8;
+  background: #eef3fd;
+  color: #1b1d22;
+}
+
+.chip--active {
+  border-color: #2156d9;
+  background: #2156d9;
+  color: #fff;
+}
+
+.chip--mood {
+  font-size: 0.85rem;
+  padding: 0.38rem 0.75rem;
+}
+
+.chip-emoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* 完了画面 */
+.success-panel {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.6rem;
+  padding: 1.5rem 0;
+}
+
+.success-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.success-title {
+  margin: 0;
+  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+  color: #1b1d22;
+}
+
+.success-body {
+  margin: 0;
+  color: #4a4f5c;
+  max-width: 36ch;
+  line-height: 1.6;
+}
+
+.success-sub {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #2156d9;
+  font-weight: 600;
+}
+
+.btn-reset {
+  margin-top: 0.8rem;
+  border: 1.5px solid #2156d9;
+  border-radius: 10px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 700;
+  color: #2156d9;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-reset:hover {
+  background: #2156d9;
+  color: #fff;
+}
+
 .error {
   color: #ba1a1a;
   font-size: 0.9rem;
-}
-
-.status {
-  margin: 0;
-  font-size: 0.95rem;
 }
