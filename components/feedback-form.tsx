@@ -41,6 +41,7 @@ const successMessages: Record<string, { title: string; body: string }> = {
 };
 
 type Category = (typeof categories)[number]['value'];
+type LotteryOutcome = 'win' | 'lose';
 
 type FormState = {
   isAnonymous: boolean;
@@ -69,6 +70,12 @@ export function FeedbackForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submittedCategory, setSubmittedCategory] = useState<Category | null>(null);
+  const [lotteryOutcome, setLotteryOutcome] = useState<LotteryOutcome | null>(null);
+  const [discordId, setDiscordId] = useState('');
+  const [memberType, setMemberType] = useState<'member' | 'guest' | null>(null);
+  const [rewardError, setRewardError] = useState<string | null>(null);
+  const [isRewardConfirmed, setIsRewardConfirmed] = useState(false);
+  const [isRewardSubmitting, setIsRewardSubmitting] = useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -88,6 +95,12 @@ export function FeedbackForm() {
       }
 
       setSubmittedCategory(form.category);
+      setLotteryOutcome(null);
+      setDiscordId('');
+      setMemberType(null);
+      setRewardError(null);
+      setIsRewardConfirmed(false);
+      setIsRewardSubmitting(false);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : '送信エラーが発生しました');
     } finally {
@@ -99,17 +112,142 @@ export function FeedbackForm() {
     setSubmittedCategory(null);
     setForm(createDefaultForm());
     setError(null);
+    setLotteryOutcome(null);
+    setDiscordId('');
+    setMemberType(null);
+    setRewardError(null);
+    setIsRewardConfirmed(false);
+    setIsRewardSubmitting(false);
+  }
+
+  function handleLotteryDraw() {
+    const winRate = 0.32;
+    setLotteryOutcome(Math.random() < winRate ? 'win' : 'lose');
+    setRewardError(null);
+    setIsRewardConfirmed(false);
+    setIsRewardSubmitting(false);
+  }
+
+  async function handleRewardConfirm() {
+    if (!discordId.trim()) {
+      setRewardError('当選特典の受け取りにはDiscord IDを入力してください。');
+      return;
+    }
+
+    if (!memberType) {
+      setRewardError('会員か非会員かを選択してください。');
+      return;
+    }
+
+    setRewardError(null);
+    setIsRewardSubmitting(true);
+
+    const rewardType = memberType === 'member' ? 'token' : 'point';
+
+    try {
+      const response = await fetch('/api/reward-claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          discordId: discordId.trim(),
+          memberType,
+          rewardType
+        })
+      });
+
+      const body = (await response.json()) as { message?: string };
+      if (!response.ok) {
+        throw new Error(body.message ?? '特典情報の保存に失敗しました');
+      }
+
+      setIsRewardConfirmed(true);
+    } catch (claimError) {
+      setRewardError(claimError instanceof Error ? claimError.message : '特典情報の保存に失敗しました');
+    } finally {
+      setIsRewardSubmitting(false);
+    }
   }
 
   if (submittedCategory) {
     const msg = successMessages[submittedCategory];
     const cat = categories.find((c) => c.value === submittedCategory);
+
     return (
       <div className="success-panel">
         <div className="success-icon">{cat?.emoji}</div>
         <h2 className="success-title">{msg.title}</h2>
         <p className="success-body">{msg.body}</p>
         <p className="success-sub">コミュニティを育てる一票を受け取りました🌱</p>
+
+        <section className="lottery-box" aria-live="polite">
+          <h3 className="lottery-title">🎰 投票ありがとう抽選</h3>
+          <p className="lottery-note">抽選ボタンでランダムに「当選」または「ハズレ」が決まります。</p>
+
+          {!lotteryOutcome ? (
+            <button type="button" className="btn-lottery" onClick={handleLotteryDraw}>
+              抽選を引く
+            </button>
+          ) : null}
+
+          {lotteryOutcome === 'lose' ? (
+            <p className="lottery-lose">今回はハズレでした…！次回の投票で再チャレンジしてください 🙌</p>
+          ) : null}
+
+          {lotteryOutcome === 'win' ? (
+            <div className="lottery-win">
+              <p className="lottery-win-title">🎉 当選！特典の受け取り情報を入力してください。</p>
+
+              <div className="row">
+                <label htmlFor="discordId">Discord ID</label>
+                <input
+                  id="discordId"
+                  type="text"
+                  placeholder="例: metagri_user"
+                  value={discordId}
+                  onChange={(event) => setDiscordId(event.target.value)}
+                />
+              </div>
+
+              <div className="row">
+                <label>会員ステータス</label>
+                <div className="member-chips">
+                  <button
+                    type="button"
+                    className={`chip${memberType === 'member' ? ' chip--active' : ''}`}
+                    onClick={() => setMemberType('member')}
+                  >
+                    会員
+                  </button>
+                  <button
+                    type="button"
+                    className={`chip${memberType === 'guest' ? ' chip--active' : ''}`}
+                    onClick={() => setMemberType('guest')}
+                  >
+                    非会員
+                  </button>
+                </div>
+              </div>
+
+              <button type="button" className="btn-lottery" onClick={handleRewardConfirm} disabled={isRewardSubmitting}>
+                {isRewardSubmitting ? '保存中...' : '特典を確定する'}
+              </button>
+
+              {rewardError ? <p className="error">{rewardError}</p> : null}
+
+              {isRewardConfirmed ? (
+                <div className="reward-panel">
+                  <p className="reward-title">受け取り申請を受け付けました！</p>
+                  <p className="reward-body">
+                    {memberType === 'member'
+                      ? '会員特典として独自トークンを付与します。'
+                      : '非会員特典としてポイントを付与します。'}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+
         <button type="button" className="btn-reset" onClick={handleReset}>
           もう一件投稿する
         </button>
@@ -160,7 +298,9 @@ export function FeedbackForm() {
       </div>
 
       <div className="row">
-        <label>いまの気分 <span className="label-optional">（任意）</span></label>
+        <label>
+          いまの気分 <span className="label-optional">（任意）</span>
+        </label>
         <div className="mood-chips">
           {moods.map((mood) => (
             <button
