@@ -18,4 +18,11 @@ export const feedbackSchema = z.object({
   }
 });
 
+export const rewardClaimSchema = z.object({
+  discordId: z.string().trim().min(2, 'Discord IDを入力してください').max(50),
+  memberType: z.enum(['member', 'guest']),
+  rewardType: z.enum(['token', 'point'])
+});
+
 export type FeedbackInput = z.infer<typeof feedbackSchema>;
+export type RewardClaimInput = z.infer<typeof rewardClaimSchema>;
