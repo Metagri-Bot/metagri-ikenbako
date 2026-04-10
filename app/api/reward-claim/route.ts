@@ -40,15 +40,19 @@ export async function POST(request: NextRequest) {
       ip
     );
 
-    if (env.NOTIFICATION_WEBHOOK_URL && env.NOTIFICATION_TO_ADDRESS) {
+    if (env.NOTIFICATION_WEBHOOK_URL || (env.RESEND_API_KEY && env.NOTIFICATION_EMAIL_TO && env.NOTIFICATION_EMAIL_FROM)) {
       try {
         await notifyRewardClaim({
           webhookUrl: env.NOTIFICATION_WEBHOOK_URL,
-          toAddress: env.NOTIFICATION_TO_ADDRESS,
-          discordId: parsed.data.discordId,
-          memberType: parsed.data.memberType,
-          rewardType: parsed.data.rewardType,
-          ip
+          emailApiKey: env.RESEND_API_KEY,
+          emailTo: env.NOTIFICATION_EMAIL_TO,
+          emailFrom: env.NOTIFICATION_EMAIL_FROM,
+          payload: {
+            discordId: parsed.data.discordId,
+            memberType: parsed.data.memberType,
+            rewardType: parsed.data.rewardType,
+            ip
+          }
         });
       } catch (notificationError) {
         console.error('[reward-claim-api] notification failed', notificationError);

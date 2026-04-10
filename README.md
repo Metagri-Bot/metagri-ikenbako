@@ -18,7 +18,8 @@ App Router構成で、モバイル対応UI・匿名/記名投稿・クライア�
 - 当選情報のGoogle Sheets保存
   - `POST /api/reward-claim` で当選入力情報を追記
 - 当選情報入力時の通知
-  - Webhook経由で指定アドレス宛に通知
+  - Webhook通知（Discord/Slack等）
+  - メール通知（Resend API）
 - スパム対策（MVP向け）
   - Honeypot
   - 送信速度チェック（フォーム表示直後の送信を拒否）
@@ -54,6 +55,9 @@ npm run dev
 - `APP_URL`（例: `https://xxxxx.vercel.app`）
 - `NOTIFICATION_WEBHOOK_URL`（任意。通知先サービスのWebhook URL）
 - `NOTIFICATION_TO_ADDRESS`（任意。通知メッセージ内に含める通知先アドレス）
+- `RESEND_API_KEY`（任意。メール通知を有効化する場合）
+- `NOTIFICATION_EMAIL_TO`（任意。通知メール送信先）
+- `NOTIFICATION_EMAIL_FROM`（任意。通知メール送信元。Resendで検証済みドメインが必要）
 - `RATE_LIMIT_WINDOW_MS`（デフォルト: 60000）
 - `RATE_LIMIT_MAX_REQUESTS`（デフォルト: 5）
 - `MIN_SUBMIT_SECONDS`（デフォルト: 3）
