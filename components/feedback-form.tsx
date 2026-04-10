@@ -53,6 +53,14 @@ type FormState = {
   submittedAt: string;
 };
 
+const categoryBonusRate: Record<Category, number> = {
+  opinion: 0.08,
+  request: 0.12,
+  trouble: 0.1,
+  idea: 0.15,
+  cheer: 0.05
+};
+
 function createDefaultForm(): FormState {
   return {
     isAnonymous: true,
@@ -70,7 +78,9 @@ export function FeedbackForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submittedCategory, setSubmittedCategory] = useState<Category | null>(null);
+  const [submittedMessage, setSubmittedMessage] = useState('');
   const [lotteryOutcome, setLotteryOutcome] = useState<LotteryOutcome | null>(null);
+  const [hasDrawnLottery, setHasDrawnLottery] = useState(false);
   const [discordId, setDiscordId] = useState('');
   const [memberType, setMemberType] = useState<'member' | 'guest' | null>(null);
   const [rewardError, setRewardError] = useState<string | null>(null);
@@ -95,7 +105,9 @@ export function FeedbackForm() {
       }
 
       setSubmittedCategory(form.category);
+      setSubmittedMessage(form.message);
       setLotteryOutcome(null);
+      setHasDrawnLottery(false);
       setDiscordId('');
       setMemberType(null);
       setRewardError(null);
@@ -113,6 +125,7 @@ export function FeedbackForm() {
     setForm(createDefaultForm());
     setError(null);
     setLotteryOutcome(null);
+    setHasDrawnLottery(false);
     setDiscordId('');
     setMemberType(null);
     setRewardError(null);
@@ -120,9 +133,21 @@ export function FeedbackForm() {
     setIsRewardSubmitting(false);
   }
 
+  function computeWinRate(category: Category, message: string) {
+    const baseRate = 0.1;
+    const lengthRate = Math.min(message.trim().length, 500) / 500 * 0.25;
+    const winRate = baseRate + lengthRate + categoryBonusRate[category];
+    return Math.min(0.5, winRate);
+  }
+
   function handleLotteryDraw() {
-    const winRate = 0.32;
+    if (hasDrawnLottery || !submittedCategory) {
+      return;
+    }
+
+    const winRate = computeWinRate(submittedCategory, submittedMessage);
     setLotteryOutcome(Math.random() < winRate ? 'win' : 'lose');
+    setHasDrawnLottery(true);
     setRewardError(null);
     setIsRewardConfirmed(false);
     setIsRewardSubmitting(false);
@@ -181,16 +206,16 @@ export function FeedbackForm() {
 
         <section className="lottery-box" aria-live="polite">
           <h3 className="lottery-title">🎰 投票ありがとう抽選</h3>
-          <p className="lottery-note">抽選ボタンでランダムに「当選」または「ハズレ」が決まります。</p>
+          <p className="lottery-note">
+            抽選は1回のみです。基本当選率は10%で、投稿文字数とカテゴリに応じて最大50%まで上がります。
+          </p>
 
-          {!lotteryOutcome ? (
-            <button type="button" className="btn-lottery" onClick={handleLotteryDraw}>
-              抽選を引く
-            </button>
-          ) : null}
+          <button type="button" className="btn-lottery" onClick={handleLotteryDraw} disabled={hasDrawnLottery}>
+            {hasDrawnLottery ? '抽選は完了しました' : '抽選を引く'}
+          </button>
 
           {lotteryOutcome === 'lose' ? (
-            <p className="lottery-lose">今回はハズレでした…！次回の投票で再チャレンジしてください 🙌</p>
+            <p className="lottery-lose">今回はハズレでした…！もう一度投稿すると再チャレンジできます 🙌</p>
           ) : null}
 
           {lotteryOutcome === 'win' ? (
@@ -199,13 +224,14 @@ export function FeedbackForm() {
 
               <div className="row">
                 <label htmlFor="discordId">Discord ID</label>
-                <input
-                  id="discordId"
-                  type="text"
-                  placeholder="例: metagri_user"
-                  value={discordId}
-                  onChange={(event) => setDiscordId(event.target.value)}
-                />
+                  <input
+                    id="discordId"
+                    type="text"
+                    placeholder="例: metagri_user"
+                    value={discordId}
+                    disabled={isRewardConfirmed}
+                    onChange={(event) => setDiscordId(event.target.value)}
+                  />
               </div>
 
               <div className="row">
@@ -214,6 +240,7 @@ export function FeedbackForm() {
                   <button
                     type="button"
                     className={`chip${memberType === 'member' ? ' chip--active' : ''}`}
+                    disabled={isRewardConfirmed}
                     onClick={() => setMemberType('member')}
                   >
                     会員
@@ -221,6 +248,7 @@ export function FeedbackForm() {
                   <button
                     type="button"
                     className={`chip${memberType === 'guest' ? ' chip--active' : ''}`}
+                    disabled={isRewardConfirmed}
                     onClick={() => setMemberType('guest')}
                   >
                     非会員
@@ -228,7 +256,12 @@ export function FeedbackForm() {
                 </div>
               </div>
 
-              <button type="button" className="btn-lottery" onClick={handleRewardConfirm} disabled={isRewardSubmitting}>
+              <button
+                type="button"
+                className="btn-lottery"
+                onClick={handleRewardConfirm}
+                disabled={isRewardSubmitting || isRewardConfirmed}
+              >
                 {isRewardSubmitting ? '保存中...' : '特典を確定する'}
               </button>
 
@@ -242,6 +275,7 @@ export function FeedbackForm() {
                       ? '会員特典として独自トークンを付与します。'
                       : '非会員特典としてポイントを付与します。'}
                   </p>
+                  <p className="reward-body">続けて参加する場合は「もう一件投稿する」から次の投稿へ進んでください。</p>
                 </div>
               ) : null}
             </div>
