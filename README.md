@@ -11,6 +11,23 @@ App Router構成で、モバイル対応UI・匿名/記名投稿・クライア�
   - クライアント：必須/文字数
   - サーバー：Zodスキーマで再検証
 - Google Sheets保存（サービスアカウント）
+- 投票完了後のランダム抽選ギミック
+  - 抽選は投稿ごとに `1回のみ`
+  - 基本当選率 `10%`
+  - 投稿文字数とカテゴリで当選率が上昇し、`最大50%` まで傾斜
+  - カテゴリー別の当選率ボーナス（改善要望/アイデアを高めに設定）
+    - `idea`（アイデア）: `+15%`
+    - `request`（改善要望）: `+12%`
+    - `trouble`（困りごと）: `+10%`
+    - `opinion`（意見）: `+8%`
+    - `cheer`（応援メッセージ）: `+5%`
+  - 当選時は Discord ID + 会員/非会員を入力して特典申請
+  - 会員は独自トークン、非会員はポイントを案内
+- 当選情報のGoogle Sheets保存
+  - `POST /api/reward-claim` で当選入力情報を追記
+- 当選情報入力時の通知
+  - Webhook通知（Discord/Slack等）
+  - メール通知（Resend API）
 - スパム対策（MVP向け）
   - Honeypot
   - 送信速度チェック（フォーム表示直後の送信を拒否）
@@ -44,6 +61,11 @@ npm run dev
 - `GOOGLE_SPREADSHEET_ID`
 - `GOOGLE_SHEET_NAME`（例: `feedback`）
 - `APP_URL`（例: `https://xxxxx.vercel.app`）
+- `NOTIFICATION_WEBHOOK_URL`（任意。通知先サービスのWebhook URL）
+- `NOTIFICATION_TO_ADDRESS`（任意。通知メッセージ内に含める通知先アドレス）
+- `RESEND_API_KEY`（任意。メール通知を有効化する場合）
+- `NOTIFICATION_EMAIL_TO`（任意。通知メール送信先）
+- `NOTIFICATION_EMAIL_FROM`（任意。通知メール送信元。Resendで検証済みドメインが必要）
 - `RATE_LIMIT_WINDOW_MS`（デフォルト: 60000）
 - `RATE_LIMIT_MAX_REQUESTS`（デフォルト: 5）
 - `MIN_SUBMIT_SECONDS`（デフォルト: 3）
@@ -59,9 +81,12 @@ npm run dev
 3. シート名を `GOOGLE_SHEET_NAME` に合わせる
 4. API有効化（Google Sheets API）
 
-### シート推奨列順
+### シート推奨列順（現行実装）
 
-`timestamp`, `name_or_anonymous`, `category`, `message`, `ip`, `submitted_at`, `is_anonymous`
+`type`, `timestamp`, `name_or_anonymous_or_discord`, `category`, `mood`, `message_or_claim_note`, `ip`, `submitted_at`, `is_anonymous`, `reward_type`
+
+- `type=feedback` の行: 通常のフィードバック投稿
+- `type=reward-claim` の行: 当選時の特典申請
 
 ## テスト
 
