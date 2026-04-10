@@ -75,6 +75,7 @@ export function FeedbackForm() {
   const [memberType, setMemberType] = useState<'member' | 'guest' | null>(null);
   const [rewardError, setRewardError] = useState<string | null>(null);
   const [isRewardConfirmed, setIsRewardConfirmed] = useState(false);
+  const [isRewardSubmitting, setIsRewardSubmitting] = useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -99,6 +100,7 @@ export function FeedbackForm() {
       setMemberType(null);
       setRewardError(null);
       setIsRewardConfirmed(false);
+      setIsRewardSubmitting(false);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : '送信エラーが発生しました');
     } finally {
@@ -115,6 +117,7 @@ export function FeedbackForm() {
     setMemberType(null);
     setRewardError(null);
     setIsRewardConfirmed(false);
+    setIsRewardSubmitting(false);
   }
 
   function handleLotteryDraw() {
@@ -122,9 +125,10 @@ export function FeedbackForm() {
     setLotteryOutcome(Math.random() < winRate ? 'win' : 'lose');
     setRewardError(null);
     setIsRewardConfirmed(false);
+    setIsRewardSubmitting(false);
   }
 
-  function handleRewardConfirm() {
+  async function handleRewardConfirm() {
     if (!discordId.trim()) {
       setRewardError('当選特典の受け取りにはDiscord IDを入力してください。');
       return;
@@ -136,7 +140,32 @@ export function FeedbackForm() {
     }
 
     setRewardError(null);
-    setIsRewardConfirmed(true);
+    setIsRewardSubmitting(true);
+
+    const rewardType = memberType === 'member' ? 'token' : 'point';
+
+    try {
+      const response = await fetch('/api/reward-claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          discordId: discordId.trim(),
+          memberType,
+          rewardType
+        })
+      });
+
+      const body = (await response.json()) as { message?: string };
+      if (!response.ok) {
+        throw new Error(body.message ?? '特典情報の保存に失敗しました');
+      }
+
+      setIsRewardConfirmed(true);
+    } catch (claimError) {
+      setRewardError(claimError instanceof Error ? claimError.message : '特典情報の保存に失敗しました');
+    } finally {
+      setIsRewardSubmitting(false);
+    }
   }
 
   if (submittedCategory) {
@@ -199,8 +228,8 @@ export function FeedbackForm() {
                 </div>
               </div>
 
-              <button type="button" className="btn-lottery" onClick={handleRewardConfirm}>
-                特典を確定する
+              <button type="button" className="btn-lottery" onClick={handleRewardConfirm} disabled={isRewardSubmitting}>
+                {isRewardSubmitting ? '保存中...' : '特典を確定する'}
               </button>
 
               {rewardError ? <p className="error">{rewardError}</p> : null}
